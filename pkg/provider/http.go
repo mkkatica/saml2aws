@@ -88,6 +88,8 @@ func (hc *HTTPClient) Do(req *http.Request) (*http.Response, error) {
 		return resp, err
 	}
 
+	hc.logHTTPResponse(resp)
+
 	// if a response check has been configured
 	if hc.CheckResponseStatus != nil {
 		err = hc.CheckResponseStatus(req, resp)
@@ -95,8 +97,6 @@ func (hc *HTTPClient) Do(req *http.Request) (*http.Response, error) {
 			return resp, err
 		}
 	}
-
-	hc.logHTTPResponse(resp)
 
 	return resp, err
 }
@@ -117,6 +117,8 @@ func (hc *HTTPClient) EnableFollowRedirect() {
 func SuccessOrRedirectResponseValidator(req *http.Request, resp *http.Response) error {
 	if resp.StatusCode >= 200 && resp.StatusCode < 400 {
 		return nil
+	} else {
+
 	}
 
 	return errors.Errorf("request for url: %s failed status: %s", req.URL.String(), resp.Status)
@@ -139,6 +141,13 @@ func (hc *HTTPClient) logHTTPResponse(resp *http.Response) {
 
 	if dump.ContentEnable() {
 		fmt.Println(dump.ResponseString(resp))
+		var rBody []byte
+		_, err := resp.Body.Read(rBody)
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"ResponseBody": rBody,
+			})
+		}
 		return
 	}
 
